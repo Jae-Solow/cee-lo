@@ -74,6 +74,8 @@ class CeeLoGame:
         self.score_label = tk.Label(root, text="Player 1: 0, Player 2: 0")
         self.score_label.pack()
         
+        self.update_scores()
+        
     def play_turn(self):
         dice_roll, outcome = self.current_player.roll()
         result = self.current_player.update_score(outcome)
