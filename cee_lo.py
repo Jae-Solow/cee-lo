@@ -1,5 +1,10 @@
+import os
+os.environ['TK_SILENCE_DEPRECATION'] = '1'
+
 import random
 import sys
+import tkinter as tk
+from tkinter import messagebox
 
 def roll_dice(num_dice=3):
     """Rolls the specified number of dice and returns a list of results."""
@@ -20,102 +25,78 @@ def evaluate_roll(dice):
         return f"Point is: {point}"
     else:
         return "No point, roll again"
-def player_roll():
-    """Prompt the player to roll the dice"""
-    input("Press Enter to roll the dice")
+    
+class Player:
+    def __init__(self, name):
+        self.name = name
+        self.score = 0
+        self.point = 0
+        
+    def roll(self):
+        dice_roll = roll_dice()
+        outcome = evaluate_roll(dice_roll)
+        return dice_roll, outcome
 
-def end_game():
-    """Ends the game and exits the program."""
-    print("Game Ended! Thanks for playing!")
-    sys.exit()
-    
-def play_cee_lo():
-    """Maintains the game loop and player interactions."""
-    print("Welcome to Cee-lo!")
-    print("The rules are simple: roll three dice and get a point value based on the outcome.")
-    print("The player with the highest point value wins, unless there's a tie!")
-    
-    play_again = input("Play Cee-lo? (y/n): ").lower()
-    if play_again != "y":
-        return
-    
-    player1_score = 0
-    player2_score = 0
-    player2_point = 0
-    while True:
-        #Player 1's turn
-        print("\nPlayer 1's turn!")
-        player1_point = 0
-        player_roll() # Player 1 rolls the dice
-        dice_roll = roll_dice()
-        print("You rolled:", dice_roll)
-        outcome = evaluate_roll(dice_roll)
-        print("Outcome:", outcome)
-            
+    def update_score(self, outcome):
         if "Win" in outcome:
-            player1_score += 1
-            print("Player 1 wins this round!")
-            break
+            self.score += 1
+            return True
         elif "Loss" in outcome:
-            player2_score += 1
-            print("Player 2 wins this round!")
-            break
+            return False
         else:
             if "No point" in outcome:
-                player1_point = 0
-                print("No point, roll again!")
+                self.point = 0
             else:
                 try:
-                    player1_point = int(outcome.split()[-1])
-                    print("Your point is", player1_point)
+                    self.point = int(outcome.split()[-1])
                 except ValueError:
-                    print("Invalid point value, Roll again!")
-                    continue
-                
-        # Check for winner after both players roll
-        if player1_score >= 3:
-            print("\nPlayer 1 wins the game!")
-            return
-        elif player2_score >= 3:
-            print("\nPlayer 2 wins the game!")
-            return
-        elif player1_point == player2_point:
-            print("\nIt's a tie! Roll again!")
-        else:
-            if player1_point > player2_point:
-                print("\nPlayer 1 has the higher point. Player 2 rolls again!")
-            else:
-                print("\nPlayer 2 has the higher point. Player 1 rolls again!")
-        
-        #Player 2's turn
-        print("\nPlayer 2's turn!")    
-        player2_point = 0
-        player_roll() # Player 2 rolls the dice
-        dice_roll = roll_dice()
-        print("You rolled:", dice_roll)
-        outcome = evaluate_roll(dice_roll)
-        print("Outcome:", outcome)
-            
-        if "Win" in outcome:
-            player2_score += 1
-            print("Player 2 wins this round!")
-        elif "Loss" in outcome:
-            player1_score += 1
-            print("Player 1 wins this round!")
-        else:
-            if "No point" in outcome:
-                player1_point = 0
-                print("No point, roll again!")
-            else:
-                try:
-                    player2_point = int(outcome.split()[-1])
-                    print("Your point is", player2_point)
-                except ValueError:
-                    print("Invalid point value, Roll again!")
-                    continue
+                    pass
+            return None
     
-    # Check for input to end the game
-    if input("Press 'q' to end the game").lower() == "q":
-        end_game()
+class CeeLoGame:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Cee-Lo Game")
         
-play_cee_lo()
+        self.player1 = Player("Player 1")
+        self.player2 = Player("Player 2")
+        self.current_player = self.player1
+        
+        self.label = tk.Label(root, text="Welcome to Cee-Lo! Game")
+        self.label.pack()
+        
+        self.roll_button = tk.Button(root, text="Roll Dice", command=self.play_turn)
+        self.roll_button.pack()
+        
+        self.result_label = tk.Label(root, text="")
+        self.result_label.pack()
+        
+        self.score_label = tk.Label(root, text="Player 1: 0, Player 2: 0")
+        self.score_label.pack()
+        
+    def play_turn(self):
+        dice_roll, outcome = self.current_player.roll()
+        result = self.current_player.update_score(outcome)
+        
+        self.result_label.config(text=f"{self.current_player.name} rolled: {dice_roll}\nOutcome: {outcome}")
+        
+        if result is not None:
+            if result:
+                messagebox.showinfo("Round Result", f"{self.current_player.name} wins this round")
+            else:
+                messagebox.showinfo("Round Result", f"{self.current_player.name} loses this round")
+            self.update_scores()
+            self.switch_player()
+        else:
+            self.result_label.config(text=f"{self.current_player.name} rolled: {dice_roll}\nOutcome: {outcome}")
+    
+    def switch_player(self):
+        self.current_player = self.player2 if self.current_player == self.player1 else self.player1 
+        
+    def update_scores(self):
+        self.score_label.config(text=f"Scores:\nPlayer 1: {self.player1.score}\nPlayer 2: {self.player2.score}")
+        
+if __name__ == "__main__":
+    root = tk.Tk()
+    game = CeeLoGame(root)
+    root.mainloop()
