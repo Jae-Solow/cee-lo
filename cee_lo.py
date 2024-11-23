@@ -71,7 +71,7 @@ class CeeLoGame:
         self.result_label = tk.Label(root, text="")
         self.result_label.pack()
         
-        self.score_label = tk.Label(root, text="Player 1: 0, Player 2: 0")
+        self.score_label = tk.Label(root, text="Player 1: 0, Player 2: 0", fg="white", bg="black")
         self.score_label.pack()
         
         self.update_scores()
